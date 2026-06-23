@@ -36,8 +36,8 @@ Clone the workspace, compile the static image targets, and flash it down to the 
 
 ```bash
 # Clone the repository
-git clone [https://github.com/hardhus/rust_pico_template.git](https://github.com/hardhus/rust_pico_template.git)
-cd rust_pico_template
+git clone https://github.com/hardhus/rust_pico2w_template.git
+cd rust_pico2w_template
 
 # Hold the BOOTSEL button, plug in the USB cable, then run:
 cargo run
