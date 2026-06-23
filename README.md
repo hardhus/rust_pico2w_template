@@ -1,11 +1,13 @@
 # Rust Pico 2W Template
 
-A minimal, production-ready asynchronous template for the **Raspberry Pi Pico 2W (RP2350 + CYW43439)**. This template configures the Embassy framework to enable unified global logging over USB via the standard `log` crate macros (`info!`, `warn!`, etc.) and controls the onboard wireless LED without requiring any local `.bin` firmware blobs.
+A minimal, production-ready asynchronous template for the **Raspberry Pi Pico 2W (RP2350 + CYW43439)**. This template configures the Embassy framework to enable unified global logging over USB via the standard `log` crate macros (`info!`, `warn!`, `error!`, `debug!`, `trace!`) during development, while completely purging all logging overhead in production builds.
 
 ## Features
 
 - **Embassy Async Runtime** – Full event-driven architecture utilizing async/await, eliminating blocking delays (`delay_ms`) to maximize CPU efficiency.
-- **Global USB Serial Logging** – Fully integrated with the `log` crate. Use `info!`, `warn!`, `error!` anywhere in your codebase; logs are safely batched into an atomic async queue (`embassy-sync::channel`) and sent straight over the native USB port.
+- **Zero-Cost Debug/Release Logger** – Fully integrated with the `log` crate macros. 
+  - **In Development (`cargo run`):** Logs are safely batched into an async queue (`embassy-sync::channel`) and streamed via a native USB CDC-ACM serial port.
+  - **In Production (`cargo run --release`):** The compilation pipeline utilizes smart compile-time separation (`#[cfg(debug_assertions)]`). The entire USB serial driver code, static buffers, and all log macros are completely stripped out from the binary by the compiler. Zero byte overhead, zero CPU cycles, and absolute stealth with no serial port footprint.
 - **Embedded Firmware Injection** – Leverages `cyw43-setup` to dynamically inject the CYW43439 Wi-Fi controller microcode layout directly at startup. No manually downloaded binary blobs are needed in the workspace.
 - **Pure Software Reloading** – Configured with a `picotool` runner setup. Dropping the board into **BOOTSEL** mode and typing `cargo run` automatically flashes, verifies, and hot-boots the device over USB.
 
@@ -57,7 +59,7 @@ screen /dev/ttyACM0 115200
 
 ```
 
-Expected live execution log:
+Expected live execution log (Only available in development builds):
 
 ```text
 Connected to COM5
@@ -69,6 +71,15 @@ Press Control-X to exit
 
 ```
 
+To deploy the invisible, production-ready binary with the logging module entirely stripped out:
+
+```bash
+cargo run --release
+
+```
+
+*(Running `serial-monitor.exe` after this command will output `No USB serial ports found`, confirming complete optimization and stealth).*
+
 ## Workspace Layout
 
 ```text
@@ -76,9 +87,9 @@ Press Control-X to exit
 ├── .cargo/
 │   └── config.toml      # Architecture matrix target details and picotool execution hook
 ├── src/
-│   ├── main.rs          # System initialization, execution spawner logic, and blinky block
-│   ├── logger.rs        # Global UsbLogger implementation backing the log facade
-│   └── usb_logger.rs    # Safe static cell-backed USB device initialization stack
+│   ├── main.rs          # System initialization, execution spawner logic, and compile-time log filtering
+│   ├── logger.rs        # Global UsbLogger implementation (Compiled conditionally)
+│   └── usb_logger.rs    # Safe static cell-backed USB device stack (Compiled conditionally)
 ├── build.rs             # Output memory allocation and linker script staging script
 ├── Cargo.toml           # Complete dependency definitions (Embassy git targets + cyw43 crates)
 ├── memory.x             # Core ARM memory boundary flash definition

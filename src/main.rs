@@ -1,8 +1,39 @@
 #![no_std]
 #![no_main]
 
+#[cfg(debug_assertions)]
 mod logger;
+#[cfg(debug_assertions)]
 mod usb_logger;
+
+#[cfg(not(debug_assertions))]
+#[macro_export]
+macro_rules! info {
+    ($($tt:tt)*) => {{}};
+}
+#[cfg(not(debug_assertions))]
+#[macro_export]
+macro_rules! warn {
+    ($($tt:tt)*) => {{}};
+}
+#[cfg(not(debug_assertions))]
+#[macro_export]
+macro_rules! error {
+    ($($tt:tt)*) => {{}};
+}
+#[cfg(not(debug_assertions))]
+#[macro_export]
+macro_rules! debug {
+    ($ ($tt:tt)*) => {{}};
+}
+#[cfg(not(debug_assertions))]
+#[macro_export]
+macro_rules! trace {
+    ($($tt:tt)*) => {{}};
+}
+
+#[cfg(debug_assertions)]
+use log::*;
 
 use cyw43_pio::{PioSpi, RM2_CLOCK_DIVIDER};
 use cyw43_setup::{FW, NVRAM};
@@ -17,8 +48,6 @@ use embassy_rp::pio::{InterruptHandler, Pio};
 use embassy_time::{Duration, Timer};
 use panic_halt as _;
 use static_cell::StaticCell;
-
-use log::*;
 
 bind_interrupts!(struct Irqs {
     PIO0_IRQ_0 => InterruptHandler<PIO0>;
@@ -40,10 +69,13 @@ pub static IMAGE_DEF: ImageDef = hal::block::ImageDef::secure_exe();
 async fn main(spawner: Spawner) {
     let p = embassy_rp::init(Default::default());
 
-    let class = usb_logger::init_usb(spawner, p.USB).await;
-    let (sender, _reader) = class.split();
-    spawner.spawn(logger::log_task(sender)).unwrap();
-    logger::init_logger().unwrap();
+    #[cfg(debug_assertions)]
+    {
+        let class = usb_logger::init_usb(spawner, p.USB).await;
+        let (sender, _reader) = class.split();
+        spawner.spawn(logger::log_task(sender)).unwrap();
+        logger::init_logger().unwrap();
+    }
     info!("System started, initializing CYW43...");
 
     let pwr = Output::new(p.PIN_23, Level::Low);
