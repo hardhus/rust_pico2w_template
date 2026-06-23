@@ -1,0 +1,40 @@
+[package]
+name = "rust_pico2w_template"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+# Cortex-M 
+cortex-m = "0.7.7"
+cortex-m-rt = "0.7.5"
+
+# Panic Handler
+panic-halt = "1.0.0"
+
+# Embassy
+embassy-executor = { version = "0.9", features = ["arch-cortex-m", "executor-thread"] }
+embassy-time = { version = "0.5.0" }
+embassy-rp = { version = "0.10.0", features = ["time-driver", "critical-section-impl", "rp235xa", "binary-info"] }
+embassy-usb = { version = "0.6.0" }
+embassy-sync = { version = "0.6.0" }
+
+# CYW43
+cyw43 = "0.7.0"
+cyw43-pio = "0.10.0"
+cyw43-setup = "0.1.1"
+
+static_cell = "2.1.1"
+heapless = "0.8"
+log = "0.4.22"
+
+[profile.dev]
+codegen-units = 1
+debug = 2
+lto = true
+opt-level = "z"
+
+[profile.release]
+codegen-units = 1
+debug = 2
+lto = true
+opt-level = "z"

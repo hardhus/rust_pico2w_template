@@ -1,0 +1,31 @@
+[build]
+target = "thumbv8m.main-none-eabihf"
+
+[target.thumbv8m.main-none-eabihf]
+rustflags = [
+  "-C",
+  "link-arg=--nmagic",
+  "-C",
+  "link-arg=-Tlink.x",
+  "-C",
+  "target-cpu=cortex-m33",
+]
+runner = "picotool load -u -v -x -t elf"
+
+[target.thumbv8m.main-none-eabi]
+rustflags = [
+  "-C",
+  "link-arg=--nmagic",
+  "-C",
+  "link-arg=-Tlink.x",
+]
+runner = "picotool load -u -v -x -t elf"
+
+[target.riscv32imac-unknown-none-elf]
+rustflags = [
+  "-C",
+  "link-arg=--nmagic",
+  "-C",
+  "link-arg=-Trp235x_riscv.x",
+]
+runner = "picotool load -u -v -x -t elf"
